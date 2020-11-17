@@ -1,5 +1,5 @@
 ---
-title: "932A99 - Lab 1 - Group k7"
+title: "932A99 - Group K7 - Lab 1"
 author: "Hoda Fakharzadehjahromy, Otto Moen & Ravinder Reddy Atla"
 date: '2020-11-18'
 output: pdf_document
