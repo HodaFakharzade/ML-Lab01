@@ -14,6 +14,182 @@ library(kknn)
 Statement of contribution: Assignment 1 was contributed mostly by Hoda, assignment 2 mostly by Ravinder and assignment 3 mostly by Otto.
 
 # 1. Assignment 1 - Handwritten digit recognition with K-means
+## A.1.1
+Import the data into R and divide it into training, validation and test sets (50%/25%/25%)
+
+
+```{r , message=FALSE,warning=FALSE}
+#-------------------------------------------------------
+# A.1.1
+#-------------------------------------------------------
+library(tidyverse)
+Data <- read.csv("optdigits.csv",header = FALSE)
+#intended to represent values of a categorical variable
+Data$V65 <- as.factor(Data$V65) 
+n <- dim(Data)[1] # Number of rows(Samples) = 3822
+set.seed(1234)
+id=sample(1:n, floor(n*0.5))
+train=Data[id,]
+id1=setdiff(1:n, id)
+set.seed(12345)
+id2 <- sample(id1,floor(n*0.25))
+valid <- Data[id2,] #Validation Set
+id3 <- setdiff(id1,id2) #Test Set
+test <- Data[id3,]
+```
+
+## A.1.2
+Use training data to fit 30-nearest neighbor classifier with function kknn() and kernel=”rectangular” from package kknn.
+
+```{r, warning=FALSE,,echo=FALSE,}
+#-------------------------------------------------------
+# A.1.2
+#-------------------------------------------------------
+
+library(kknn)
+
+kknn_classifier_train <- kknn(V65~.,train = train, test = train,
+                              kernel = "rectangular", k = 30)
+
+kknn_classifier_test <- kknn(V65~.,train = train, test = test,
+                              kernel = "rectangular", k = 30)
+
+pred_train <- kknn_classifier_train$fitted.values
+pred_test <- kknn_classifier_test$fitted.values
+```
+## confusion matrix
+```{r , warning=FALSE}
+temp <- table(train$V65, pred_train)
+temp2 <- table(test$V65,pred_test )
+print("confusion matrix for Train ")
+temp
+print("confusion matrix for test ")
+temp2
+```
+From the Confusion Matrix for we can see that the model is most successful on predicting digits $4$. The quality of the model for fitting the input image to the correct output on training set is as follows:
+
+### Comment on the quality of predictions for different digits:
+```{r,message=FALSE,warning=FALSE,include = FALSE}
+t<-sort(diag(temp), index.return=TRUE,decreasing = TRUE)
+t2 <- t<-sort(diag(temp2), index.return=TRUE,decreasing = TRUE)
+t <- lapply(t, x<- function(x){return(x-1)})
+t2 <- lapply(t2, x<- function(x){return(x-1)})
+```
+From the Confusion Matrix for we can see that the model is most successful on predicting digits $4$. The quality of the model for fitting the input image to the correct output on training set is as follows:
+```{r,warning=FALSE,message=FALSE}
+t$ix
+```
+on the other hand,in the test set , the model is more successful on predicting digit $0$ .
+the quality of the model prediction on different digits is respectively : 
+```{r,message=FALSE, warning=FALSE}
+t2$ix
+```
+# missclassification Error 
+
+```{r ,warning=FALSE}
+missclass=function(X,X1){
+  n=length(X)
+  return(1-sum(diag(table(X,X1)))/n)
+}
+print("missclassification Error for Train Data")
+missclass(train$V65,pred_train) 
+
+print("missclassification Error for Test Data")
+
+missclass(test$V65,pred_test)
+```
+
+overall performance of the model
+================================
+```{r }
+acc=function(x,x2)
+{
+  n=length(x)
+  ac=sum(diag(table(x,x2)))/n
+  return(ac)
+}
+print("accuracy on training Data ")
+acc(train$V65,pred_train)
+
+print("accuracy on test set ")
+acc(test$V65,pred_test)
+```
+## A.1.3
+
+```{r, warning=FALSE,fig.show='hide',include = FALSE}
+#-------------------------------------------------------
+# A.1.3
+#-------------------------------------------------------
+#any 2 cases of digit 8 in the training data which were
+#easiest to classify and 3 cases that were 
+#hardest to classify
+
+v=data.frame(kknn_classifier_train$prob)
+prob <- colnames(v)[apply(v, 1, which.max)]
+v$y<-train$V65
+v$fit <- pred_train
+v$prob <- prob
+pred_8 <- v[v$y == 8,]
+
+###
+# Best
+best <- as.numeric(row.names(pred_8[order(-pred_8[,9]),][1:2,]))
+best
+
+# Worse cases 
+Worse <- as.numeric(row.names(pred_8[order(pred_8[,9]),][1:3,]))
+Worse
+#best cases visalization
+col=heat.colors(12)
+
+heatmap(t(matrix(unlist(train[best[1],-65]), nrow=8)),
+        Colv = NA, Rowv = NA,
+        col=c("white","black" ))
+
+heatmap(t(matrix(unlist(train[best[2],-65]), nrow=8)), 
+        Colv = NA, Rowv = NA,
+        col=c("white" ,"black"))
+
+#worst cases visualization
+#Reshape features for each of these cases as matrix 8x8
+# and visualize the corresponding digits
+
+heatmap(t(matrix(unlist(train[Worse[1],-65]), nrow=8)),
+        Colv = NA, Rowv = NA,col=c("white","black"))
+
+heatmap(t(matrix(unlist(train[Worse[2],-65]), nrow=8)),
+        Colv = NA, Rowv = NA,col=c("white","black"))
+
+heatmap(t(matrix(unlist(train[Worse[3],-65]), nrow=8)),
+        Colv = NA, Rowv = NA,col=c("white","black"))
+
+```
+2 easiest cases that were easy to to classify(i.e having the highest probabilities of the correct class): 
+
+
+```{r,warning=FALSE,message=FALSE}
+library(png)
+library(grid)
+library(gridExtra)
+img1 <-  rasterGrob(as.raster(readPNG("images/best1.png")), interpolate = FALSE)
+img2 <-  rasterGrob(as.raster(readPNG("images/best2.png")), interpolate = FALSE)
+grid.arrange(img1, img2, ncol = 2)
+```
+
+3 cases that were hardest to classify (i.e. having  lowest probabilities of the correct class).
+worst case:
+```{r,warning=FALSE,message=FALSE}
+library(png)
+library(grid)
+library(gridExtra)
+img1 <-  rasterGrob(as.raster(readPNG("images/worst1.png")), interpolate = FALSE)
+img2 <-  rasterGrob(as.raster(readPNG("images/worst2.png")), interpolate =
+                      FALSE)
+img3 <- rasterGrob(as.raster(readPNG("images/worst3.png")), interpolate =
+                      FALSE)
+grid.arrange(img1, img2, img3,ncol = 3)
+
+```
 
 # 2. Assignment 2 - Ridge regression and model selection
 
