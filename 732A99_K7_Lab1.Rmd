@@ -124,44 +124,24 @@ acc(test$V65,pred_test)
 #easiest to classify and 3 cases that were 
 #hardest to classify
 
-v=data.frame(kknn_classifier_train$prob)
-prob <- colnames(v)[apply(v, 1, which.max)]
-v$y<-train$V65
-v$fit <- pred_train
-v$prob <- prob
-pred_8 <- v[v$y == 8,]
-
-###
-# Best
-best <- as.numeric(row.names(pred_8[order(-pred_8[,9]),][1:2,]))
-best
-
-# Worse cases 
-Worse <- as.numeric(row.names(pred_8[order(pred_8[,9]),][1:3,]))
-Worse
-#best cases visalization
-col=heat.colors(12)
-
-heatmap(t(matrix(unlist(train[best[1],-65]), nrow=8)),
-        Colv = NA, Rowv = NA,
-        col=c("white","black" ))
-
-heatmap(t(matrix(unlist(train[best[2],-65]), nrow=8)), 
-        Colv = NA, Rowv = NA,
-        col=c("white" ,"black"))
-
-#worst cases visualization
-#Reshape features for each of these cases as matrix 8x8
-# and visualize the corresponding digits
-
-heatmap(t(matrix(unlist(train[Worse[1],-65]), nrow=8)),
-        Colv = NA, Rowv = NA,col=c("white","black"))
-
-heatmap(t(matrix(unlist(train[Worse[2],-65]), nrow=8)),
-        Colv = NA, Rowv = NA,col=c("white","black"))
-
-heatmap(t(matrix(unlist(train[Worse[3],-65]), nrow=8)),
-        Colv = NA, Rowv = NA,col=c("white","black"))
+library(dbplyr)
+new_train <-train
+new_train$prob <-kknn_classifier_train$prob[,"8"]
+df <- data.frame(new_train)
+hard <- df[order(df$prob),] %>% head(3) #three hardest case
+easy <- df[rev(order(df$prob)),] %>% head(2) # 2 easiest case
+#the easiest case
+heatmap(matrix(as.numeric(easy[1,1:64]),
+               byrow = TRUE,nrow = 8,ncol = 8), Colv = NA, Rowv = NA,col=c("white","black"))
+heatmap(matrix(as.numeric(easy[2,1:64]),byrow = 
+                 TRUE,nrow = 8,ncol = 8), Colv = NA, Rowv = NA,col=c("white","black"))
+#The hardest Case
+heatmap(matrix(as.numeric(hard[1,1:64]),
+               byrow = TRUE,nrow = 8,ncol = 8), Colv = NA, Rowv = NA,col=c("white","black"))
+heatmap(matrix(as.numeric(hard[2,1:64]),
+               byrow = TRUE,nrow = 8,ncol = 8), Colv = NA, Rowv = NA,col=c("white","black"))
+heatmap(matrix(as.numeric(hard[3,1:64]),
+               byrow = TRUE,nrow = 8,ncol = 8), Colv = NA, Rowv = NA,col=c("white","black"))
 
 ```
 2 easiest cases that were easy to to classify(i.e having the highest probabilities of the correct class): 
@@ -190,7 +170,7 @@ img3 <- rasterGrob(as.raster(readPNG("images/worst3.png")), interpolate =
 grid.arrange(img1, img2, img3,ncol = 3)
 
 ```
-
+These cases is also hard to be recognize as $8$ by human as well (my opinion).
 # 2. Assignment 2 - Ridge regression and model selection
 
 # 3. Assignment 3 - Linear regression and LASSO
