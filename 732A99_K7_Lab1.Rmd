@@ -171,6 +171,46 @@ grid.arrange(img1, img2, img3,ncol = 3)
 
 ```
 These cases is also hard to be recognize as $8$ by human as well (my opinion).
+```{r}
+#-------------------------------------------------------
+# A.1.4
+#-------------------------------------------------------
+```
+```{r,message=FALSE,warning=FALSE}
+missclass=function(X,X1){
+  n=length(X)
+  return(1-sum(diag(table(X,X1)))/n)
+}
+train_missclass <- c()
+valid_missclass <- c()
+for (k in 1:30) {
+   KKNN_model_train <- kknn(formula =V65~., kernel = "rectangular", train = train, 
+                            test = train, k = k)
+   KKNN_model_valid <- kknn(formula =V65~., kernel = "rectangular", train = train, 
+                            test = valid, k = k)
+   train_missclass <- c(train_missclass,missclass(train$V65
+                                                  ,KKNN_model_train$fitted.values))
+   valid_missclass <- c(valid_missclass,missclass(valid$V65,KKNN_model_valid$fitted.values))
+  
+}
+### plotting the result
+library(ggplot2)
+K <- 1:30
+df<-data.frame(train_missclass,K1 =K)
+df2<-data.frame(valid_missclass,K2 =K)
+df3 <- data.frame(df,df2)
+
+ggplot( ) +
+   geom_line(aes(x=df3$K1,y=df3$train_missclass,
+                 colour="training")) +
+   geom_line(aes(x=df3$K2,y=df3$valid_missclass,
+                 colour="validation")) + 
+   theme_minimal()+ggtitle("Finding the best Parameter") +
+   scale_x_continuous(breaks = 1:30) +
+   xlab("Parameter 'k'") + ylab("missclassification") +
+   geom_vline(xintercept = 3
+                   , linetype = "dotted",color = "blue")
+```
 # 2. Assignment 2 - Ridge regression and model selection
 
 # 3. Assignment 3 - Linear regression and LASSO
@@ -341,4 +381,11 @@ plot(x = new_data,
      ylab = "Test values",
      main = "Test values vs generated data")
 ```
-In general the conclusions that can be drawn from this plot are similar to those from the predicted values in that the generated data appears to follow the true data fairly well, in particular for lower levels of fat. The correlation between the true data and the generated data is `r round(cor(test$Fat, new_data), digits=2)`, which is slightly lower than for the predicted values. This makes sense as it can be observed that for the generated data there are now points that go above 60, whereas for the predicted value the upper boundary was around 60. 
+In general the conclusions that can be drawn from this plot are similar to those from the predicted values in that the generated data appears to follow the true data fairly well, in particular for lower levels of fat. The correlation between the true data and the generated data is `r round(cor(test$Fat, new_data), digits=2)`, which is slightly lower than for the predicted values. This makes sense as it can be observed that for the generated data there are now points that go above 60, whereas for the predicted value the upper boundary was around 60.
+
+
+\newpage
+# Appendix: Assignment 3
+
+```{r, ref.label=knitr::all_labels(a3==TRUE), echo=T, eval=F}
+``` 
