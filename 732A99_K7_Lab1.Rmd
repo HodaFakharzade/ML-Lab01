@@ -17,7 +17,7 @@ Statement of contribution: Assignment 1 was contributed mostly by Hoda, assignme
 ## A.1.1
 Import the data into R and divide it into training, validation and test sets (50%/25%/25%)
 
-```{r}
+```{r include=FALSE}
 #-----------------------------------------------------------------------
 # A.1.1
 #-----------------------------------------------------------------------
@@ -45,7 +45,7 @@ test <- Data[id3,]
 ## A.1.2
 Use training data to fit 30-nearest neighbor classifier with function kknn() and kernel=”rectangular” from package kknn.
 
-```{r}
+```{r include=FALSE}
 #-----------------------------------------------------------------------
 # A.1.2
 #-----------------------------------------------------------------------
@@ -120,7 +120,7 @@ print("accuracy on test set ")
 acc(test$V65,pred_test)
 ```
 ## A.1.3
-```{r}
+```{r include=FALSE}
 #-----------------------------------------------------------------------
 # A.1.3
 #-----------------------------------------------------------------------
@@ -182,7 +182,7 @@ These cases is also hard to be recognize as $8$ by human as well (my opinion).
 
 ## A.1.4
 
-```{r}
+```{r include=FALSE}
 #-----------------------------------------------------------------------
 # A.1.4
 #-----------------------------------------------------------------------
@@ -252,7 +252,7 @@ for $k=3$ bias is the smallest because missclassification error is the lowest an
 
 
 ## A.1.5 
-```{r}
+```{r include=FALSE}
 #-----------------------------------------------------------------------
 # A.1.5
 #-----------------------------------------------------------------------
@@ -278,9 +278,6 @@ $k=15$ results to the lowest empirical risk error.
 from a probabilistic view $MSE$ arises from the Liner Regression problem while Cross Enropy arises from Logistic Regression problems.
 we want to classify we are dealing with discrete output so, Cross Entropy is the better choice. Furthermore, $MSE$ does not penalizes the model for wrong classification as much as Cross Entropy does.Actually, Cross Entropy penalizes the model for incorrect classification a lot more than $MSE$ , as, its derivative is higher.
 ```{r,message=FALSE,warning=FALSE,fig.show='hide'}
-#-----------------------------------------------------------------------
-# A.1.5
-#-----------------------------------------------------------------------
 library(kknn)
 library(reshape)
 library(ggplot2)
@@ -336,11 +333,7 @@ best_K <- which(ce==min(ce))
 cat("The best performant K parameter is k =", as.character(best_K))
 ```
 # 2. Assignment 2 - Ridge regression and model selection
-```{r}
-#-----------------------------------------------------------------------
-# A.2.1
-#-----------------------------------------------------------------------
-```
+
 **Data Description : ** The data consists of voice characteristic measurements from 43 people suffering from early stage of Parkinson's disease. The voice characteristic data are obtained by monitoring patients for six months using a tele-monitoring device. The aim is to predict a score for the symptoms of the disease.
 
 * The data consists of 16 voice characteristics which constitutes our input(consider it as X).
@@ -384,7 +377,7 @@ x_test <- test_data[,c(1,4:19)]
 y_test <- test_data[,2]
 ```
 
-```{r}
+```{r include=FALSE}
 #-----------------------------------------------------------------------
 # A.2.3
 #-----------------------------------------------------------------------
@@ -457,12 +450,12 @@ df <- function(lambda){
   return(deg_of_freedom)
 }
 ```
-```{r}
+```{r include=FALSE}
 #-----------------------------------------------------------------------
 # A.2.4
 #-----------------------------------------------------------------------
 ```
-**4.**
+**2.4.**
 The values obtained below are MSE for $\lambda$ = 1,100,1000 respectively for both train and test data.
 
 ```{r echo=FALSE}
@@ -498,8 +491,8 @@ print(mean_squared_error_test)
 
 As observed from mean squared error values for train and test data, it is evident that the penalty parameter, $\lambda$ = 1 is the most appropriate one as the loss in this case is less comparatively.
 
-**5.**
-```{r}
+**2.5**
+```{r include=FALSE}
 #-----------------------------------------------------------------------
 # A.2.5
 #-----------------------------------------------------------------------
@@ -530,7 +523,7 @@ From the AIC(Akaike Information Criteria) values obtained using different $\lamb
 AIC measures balance between model fit and model complexity. It is using likelihood and degrees of freedom to obtain the measure. The complexity of the model can be interpreted from this measure This feature cannot be obtained using MSE(Mean Squared Error) which chooses a random penalty parameter and obtained the model with less error.
 
 # 3. Assignment 3 - Linear regression and LASSO
-```{r}
+```{r include=FALSE}
 #-----------------------------------------------------------------------
 # A.3.1
 #-----------------------------------------------------------------------
@@ -586,16 +579,12 @@ cat("The training error is: ",
 As can be observed by the above results the training error for this model is very low, but in contrast the test error is a lot higher. This suggests that using all 100 channels to predict the fat content leads to a highly overfitted model which performs very well on the training set but poorly on the test set.    
 
 ### 3.2 - Objective function of LASSO regression
-```{r}
-#-----------------------------------------------------------------------
-# A.3.2
-#-----------------------------------------------------------------------
-```
+
 If the relationship is still assumed to be linear an alternative to the regression model in 3.1 is the model known as least absolute shrinkage and selection operator, or LASSO. This model minimizes the minus log-likelihood plus a penalty factor $\lambda$ to force less influential features to zero and thereby exclude them from the model. The function to optimize for this model can be expressed as follows:   
 $$\hat{w}^{lasso} = argmin \sum_{i=1}^N(y_i-w_0-w_1x_{1i}-...-w_px_{pi})^2 + \lambda\sum_{j=1}^p|w_j|$$
 
 ### 3.3 - LASSO regression model
-```{r}
+```{r include=FALSE}
 #-----------------------------------------------------------------------
 # A.3.3
 #-----------------------------------------------------------------------
@@ -617,7 +606,7 @@ plot(fat_lasso,
 From the plot it can be observed that as $log(\lambda)$ increases the amount of coefficients included in the model decreases. A lot of the coefficients are forced to zero very quickly, which can be seen by observing the individual steps, where already at the first with $\lambda=0.0051$ the amount of channels have already gone from the initial 100 down to 37. To acquire a model with only three features a $\lambda$ of about $0.7$ has to be used.     
 
 ### 3.4 - Degrees of freedom vs penalty parameter
-```{r}
+```{r include=FALSE}
 #-----------------------------------------------------------------------
 # A.3.4
 #-----------------------------------------------------------------------
@@ -638,7 +627,7 @@ plot(fat_lasso_print$Lambda,
 The plot shows that as $\lambda$ increases the degrees of freedom go down, which is expected since the degrees of freedom is the amount of features in the model and as $\lambda$ increases more of these features are forced to 0 and excluded from the model. 
 
 ### 3.5 - Ridge regression model
-```{r}
+```{r include=FALSE}
 #-----------------------------------------------------------------------
 # A.3.5
 #-----------------------------------------------------------------------
@@ -656,7 +645,7 @@ plot(fat_ridge,
 The graph shows that unlike for the LASSO model, where a lot of coefficients were very quickly forced to zero, the Ridge regression does this at a slower and more gradual rate. It is also the case that for the Ridge model no feature is completely removed from the model, but are instead kept with the very low coefficient. This can be observed by the axis ticks at the top of the graph, which always say 100, compared to for the LASSO model where this number goes down as features are removed.
 
 ### 3.6 - LASSO model with cross-validation
-```{r}
+```{r include=FALSE}
 #-----------------------------------------------------------------------
 # A.3.6
 #-----------------------------------------------------------------------
@@ -694,7 +683,7 @@ plot(x = fat_lasso_cv_preds,
 Overall it seems the model looks to be making fairly solid predictions, at least for lower levels of Fat. The correlation between the predicted values and the true values is `r round(cor(test$Fat, fat_lasso_cv_preds), digits=2)`. It can be seen that as Fat levels increase there is a slight curve to the slope of the points, as the model predicts too high levels of fat. As an example of this there are 5 points predicted to have a fat level between 50 and 60 while in reality these observations all had levels below 50. 
 
 ### 3.7 - Generate new data
-```{r}
+```{r include=FALSE}
 #-----------------------------------------------------------------------
 # A.3.7
 #-----------------------------------------------------------------------
