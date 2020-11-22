@@ -232,6 +232,8 @@ optimal value of $k$ in this plot is 3.
 \
 Usually when the complexity is high we observe a high variance and when the model complexity is we face a model with high bias. Our goal is to minimize these 2 variable, hence there is always a trade-off between variance and bias.
 for $k=3$ bias is the smallest because missclassification error is the lowest and the difference between missclassification error on the training set and validation set is also small, and that is why $k=3$ is the most suitable choice for our model.
+
+
 ## A.1.5 
 From the plot we can see $k=15$ is the better parameter for our model. 
 ![Cross Entropy](images/CrossEntropy.png)
@@ -241,7 +243,7 @@ $k=15$ results to the lowest empirical risk error.
 Cross Entropy formula is : 
 
 
-$CrossEntropy = -\sum_{c=1}^My_{o,c}\log(p_{o,c})$
+$$CrossEntropy = -\sum_{c=1}^My_{o,c}\log(p_{o,c})$$
 
 - $M$:number of classes $(0,1,2,...)$
 - $y$: binary indicator (0 or 1) if class label 
