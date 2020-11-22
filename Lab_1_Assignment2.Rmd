@@ -1,0 +1,293 @@
+---
+title: "Lab 1 Block 1"
+author: "Ravinder Reddy Atla"
+date: "11/16/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Assignment 2
+
+**Data Description : ** The data consists of voice characteristic measurements from 43 people suffering from early stage of Parkinson's disease. The voice characteristic data are obtained by monitoring patients for six months using a tele-monitoring device. The aim is to predict a score for the symptoms of the disease.
+
+* The data consists of 16 voice characteristics which constitutes our input(consider it as X).
+
+* Output will be the score which is motor UPDRS variable(consider it as Y).
+
+Since our target variable can be obtained by ridge regression of voice characteristics and that target variable(Y) is normally distributed, our target variable can be written as
+
+  Y $\sim$ $N$($XW$,$\sigma^2$),
+
+  W $\sim$ $N$(0,$\sigma^2$ $\lambda^{-1} I$), where W is weight matrix and lambda is penalty constant.
+
+
+**2.Scale and split data :** The data is scaled to supress the magnitudes and is split into train and test data. Train and Test data has an extra column of 1's added for intercept($w0$). This data is divided into input and output for train and test respectively for better readability.
+
+```{r }
+parkinson_data <- read.csv('parkinsons.csv')
+parkinson_scaled_data <- scale(parkinson_data[,5:22])
+
+n <- nrow(parkinson_scaled_data)
+set.seed(1234)
+
+# Obtaining train and test values randomly using sample function
+id = sample(1:n, floor(n * 0.6))
+train_data <- parkinson_scaled_data[id,]
+train_data <- cbind(1,train_data)
+test_data <-parkinson_scaled_data[-id,]
+test_data <- cbind(1,test_data)
+
+# Train and test values are separated by input and output for better readability
+x_train <- train_data[,c(1,4:19)]
+y_train <- train_data[,2]
+
+x_test <- test_data[,c(1,4:19)]
+y_test <- test_data[,2]
+```
+
+**3.a Log Likelihood :**
+
+likelihood, P(D|w,$\sigma$) = $\pi$ $\frac{1}{\sqrt{2\pi \sigma^2}}$ exp[$\frac{-(Y - X^TW)^2}{2\sigma^2}$]
+
+log likelihood = -n$\log{\sigma}$ - $\frac{n}{2}$ $\log{2\pi}$ - $\frac{1}{2\sigma^2}$ * $\Sigma$ {$(ytrain - (xtrain*w))^2$}
+
+
+```{r }
+loglikelihood <- function(data,w, si){
+  x <- data[,c(1,4:19)]
+  y <- data[,2]
+  n <- ncol(x)
+  loss <- (y - (x %*% (as.matrix(w))))^2
+  ll <- -((n/2)*log(si^2)) - ((n/2) * log(2 * pi)) - ((1/2*si*si) * sum(loss))
+  return(ll)
+}
+```
+
+**3.b Ridge loss function :**
+
+penalty $\sim$ $exp(-\lambda W^TW/2\sigma^2)$
+
+ridge loss = $loglikelihood(w, \sigma) + \frac{\lambda}{2\sigma^2} * \Sigma$ {$w^2$}
+
+```{r }
+ridge <- function(data,par){
+    w <- par[1:17]
+    si <- par[18]
+    
+    ridge_loss <- loglikelihood(data, w, si) + ((1/(2*si*si))*(lambda * sum(w^2)))
+    return(ridge_loss)
+  }
+```
+
+**3.c Ridge Opt function**
+
+
+```{r }
+ridge_opt <- function(data,lamda){
+  
+  ridge <- function(par){
+    w <- par[1:17]
+    si <- par[18]
+    ridge_loss <- (-loglikelihood(data, w, si)) + ((1/(2*si*si))*(lambda * sum(w^2)))#-((n/2)*log(si^2)) - ((n/2) * log(2 * pi))
+    return(ridge_loss)
+  }
+  
+  set.seed(1234)
+  w <- sample(17)
+  si <-  sample(1)
+  lambda <- lamda
+  out<- optim(c(w, si), ridge, method = 'BFGS')$par
+  return(out)
+}
+```
+
+**3.d Degrees of freedom :**
+
+degrees of freedom = trace(hat_matrix)
+
+```{r }
+df <- function(lambda){
+  tobeinv <- (t(x_train) %*% x_train) + (lambda * diag(17))
+  hat_matrix <- x_train %*% solve(tobeinv) %*% t(x_train)
+  deg_of_freedom <- sum(diag(hat_matrix))
+  return(deg_of_freedom)
+}
+```
+
+**4.**
+The values obtained below are MSE for $\lambda$ = 1,100,1000 respectively for both train and test data.
+
+```{r echo=FALSE}
+
+lambda_vec <- c(1,100,1000)
+
+mean_squared_error_train <- c()
+mean_squared_error_test = c()
+l <- c()
+
+for(val in lambda_vec){
+  # Obtaining optimal 'w' values using ridge_opt()
+  param <- ridge_opt(train_data,val)
+  w <- param[1:17]
+  
+  # MSE for train data
+  pred_motor_UPDRS <- x_train %*% w
+  n <- length(y_train)
+  mse <- (1/n)* sum((pred_motor_UPDRS - y_train)^2)
+  mean_squared_error_train<- append(mean_squared_error_train,mse)
+  
+  # MSE for test data
+  pred_motor_UPDRS_test <- x_test %*% w
+  n <- length(y_test)
+  mse_test <- (1/n)* sum((pred_motor_UPDRS_test - y_test)^2)
+  mean_squared_error_test <- append(mean_squared_error_test,mse_test)
+}
+
+print(mean_squared_error_train)
+print(mean_squared_error_test)
+
+```
+
+As observed from mean squared error values for train and test data, it is evident that the penalty parameter, $\lambda$ = 1 is the most appropriate one as the loss in this case is less comparatively.
+
+**5.**
+
+```{r echo=FALSE}
+
+aic <- function(lambda){
+  param <- ridge_opt(train_data,lambda)
+  w <- param[1:17]
+  si <- param[18]
+  l <- loglikelihood(train_data,w,si)
+  d <- df(lambda)
+  info_criteria <- 2*(d-l)
+  return(info_criteria)
+}
+
+lambda_vec <- c(1,100,1000)
+aic_vec <- c()
+for(a_val in lambda_vec){
+  aic_vec <- append(aic_vec,aic(a_val))
+}
+
+aic_vec
+```
+
+From the AIC(Akaike Information Criteria) values obtained using different $\lambda$ values, it is observed that the model with  $\lambda$ = 100 and respective optimal parameters has lower AIC value comparatively which implies that the model is less complex.Hence, concluding the optimal model to be the one with $\lambda$ = 100.
+
+AIC measures balance between model fit and model complexity. It is using likelihood and degrees of freedom to obtain the measure. The complexity of the model can be interpreted from this measure This feature cannot be obtained using MSE(Mean Squared Error) which chooses a random penalty parameter and obtained the model with less error.
+
+#Appendix
+
+```{r eval=FALSE}
+
+##########################################################
+# Assignment 2
+##########################################################
+
+parkinson_data <- read.csv('parkinsons.csv')
+parkinson_scaled_data <- scale(parkinson_data[,5:22])
+
+n <- nrow(parkinson_scaled_data)
+set.seed(1234)
+
+# Obtaining train and test values randomly using sample function
+id = sample(1:n, floor(n * 0.6))
+train_data <- parkinson_scaled_data[id,]
+train_data <- cbind(1,train_data)
+test_data <-parkinson_scaled_data[-id,]
+test_data <- cbind(1,test_data)
+
+# Train and test values are separated by input and output for better readability
+x_train <- train_data[,c(1,4:19)]
+y_train <- train_data[,2]
+
+x_test <- test_data[,c(1,4:19)]
+y_test <- test_data[,2]
+
+loglikelihood <- function(data,w, si){
+  x <- data[,c(1,4:19)]
+  y <- data[,2]
+  n <- ncol(x)
+  loss <- (y - (x %*% (as.matrix(w))))^2
+  ll <- -((n/2)*log(si^2)) - ((n/2) * log(2 * pi)) - ((1/2*si*si) * sum(loss))
+  return(ll)
+}
+
+ridge <- function(data,par){
+    w <- par[1:17]
+    si <- par[18]
+    
+    ridge_loss <- loglikelihood(data, w, si) + ((1/(2*si*si))*(lambda * sum(w^2)))
+    return(ridge_loss)
+}
+
+ridge_opt <- function(data,lamda){
+  
+  ridge <- function(par){
+    w <- par[1:17]
+    si <- par[18]
+    ridge_loss <- (-loglikelihood(data, w, si)) + ((1/(2*si*si))*(lambda * sum(w^2)))-((n/2)*log(si^2)) - ((n/2) * log(2 * pi))
+    return(ridge_loss)
+  }
+  
+  set.seed(1234)
+  w <- sample(17)
+  si <-  sample(1)
+  lambda <- lamda
+  out<- optim(c(w, si), ridge, method = 'BFGS')$par
+  return(out)
+}
+
+lambda_vec <- c(1,100,1000)
+
+mean_squared_error_train <- c()
+mean_squared_error_test = c()
+l <- c()
+
+for(val in lambda_vec){
+  # Obtaining optimal 'w' values using ridge_opt()
+  param <- ridge_opt(train_data,val)
+  w <- param[1:17]
+  
+  # MSE for train data
+  pred_motor_UPDRS <- x_train %*% w
+  n <- length(y_train)
+  mse <- (1/n)* sum((pred_motor_UPDRS - y_train)^2)
+  mean_squared_error_train<- append(mean_squared_error_train,mse)
+  
+  # MSE for test data
+  pred_motor_UPDRS_test <- x_test %*% w
+  n <- length(y_test)
+  mse_test <- (1/n)* sum((pred_motor_UPDRS_test - y_test)^2)
+  mean_squared_error_test <- append(mean_squared_error_test,mse_test)
+}
+
+print(mean_squared_error_train)
+print(mean_squared_error_test)
+
+
+aic <- function(lambda){
+  param <- ridge_opt(train_data,lambda)
+  w <- param[1:17]
+  si <- param[18]
+  l <- loglikelihood(train_data,w,si)
+  d <- df(lambda)
+  info_criteria <- 2*(d-l)
+  return(info_criteria)
+}
+
+lambda_vec <- c(1,100,1000)
+aic_vec <- c()
+for(a_val in lambda_vec){
+  aic_vec <- append(aic_vec,aic(a_val))
+}
+
+print(aic_vec)
+
+##########################################################
+```
+
