@@ -17,11 +17,15 @@ Statement of contribution: Assignment 1 was contributed mostly by Hoda, assignme
 ## A.1.1
 Import the data into R and divide it into training, validation and test sets (50%/25%/25%)
 
+```{r}
+#-----------------------------------------------------------------------
+# A.1.1
+#-----------------------------------------------------------------------
+```
 
 ```{r , message=FALSE,warning=FALSE}
-#-------------------------------------------------------
-# A.1.1
-#-------------------------------------------------------
+
+
 library(tidyverse)
 Data <- read.csv("optdigits.csv",header = FALSE)
 #intended to represent values of a categorical variable
@@ -41,11 +45,12 @@ test <- Data[id3,]
 ## A.1.2
 Use training data to fit 30-nearest neighbor classifier with function kknn() and kernel=”rectangular” from package kknn.
 
-```{r, warning=FALSE,,echo=FALSE,}
-#-------------------------------------------------------
+```{r}
+#-----------------------------------------------------------------------
 # A.1.2
-#-------------------------------------------------------
-
+#-----------------------------------------------------------------------
+```
+```{r, warning=FALSE,,echo=FALSE,}
 library(kknn)
 
 kknn_classifier_train <- kknn(V65~.,train = train, test = train,
@@ -58,7 +63,7 @@ pred_train <- kknn_classifier_train$fitted.values
 pred_test <- kknn_classifier_test$fitted.values
 ```
 ## confusion matrix
-```{r , warning=FALSE}
+```{r , warning=FALSE,message=FALSE}
 temp <- table(train$V65, pred_train)
 temp2 <- table(test$V65,pred_test )
 print("confusion matrix for Train ")
@@ -115,11 +120,13 @@ print("accuracy on test set ")
 acc(test$V65,pred_test)
 ```
 ## A.1.3
-
-```{r, warning=FALSE,fig.show='hide',include = FALSE}
-#-------------------------------------------------------
+```{r}
+#-----------------------------------------------------------------------
 # A.1.3
-#-------------------------------------------------------
+#-----------------------------------------------------------------------
+```
+```{r, warning=FALSE,fig.show='hide',message=FALSE}
+
 #any 2 cases of digit 8 in the training data which were
 #easiest to classify and 3 cases that were 
 #hardest to classify
@@ -134,7 +141,8 @@ easy <- df[rev(order(df$prob)),] %>% head(2) # 2 easiest case
 heatmap(matrix(as.numeric(easy[1,1:64]),
                byrow = TRUE,nrow = 8,ncol = 8), Colv = NA, Rowv = NA,col=c("white","black"))
 heatmap(matrix(as.numeric(easy[2,1:64]),byrow = 
-                 TRUE,nrow = 8,ncol = 8), Colv = NA, Rowv = NA,col=c("white","black"))
+                 TRUE,nrow = 8,ncol = 8), Colv = NA, Rowv = NA,
+        col=c("white","black"))
 #The hardest Case
 heatmap(matrix(as.numeric(hard[1,1:64]),
                byrow = TRUE,nrow = 8,ncol = 8), Colv = NA, Rowv = NA,col=c("white","black"))
@@ -175,9 +183,9 @@ These cases is also hard to be recognize as $8$ by human as well (my opinion).
 ## A.1.4
 
 ```{r}
-#-------------------------------------------------------
+#-----------------------------------------------------------------------
 # A.1.4
-#-------------------------------------------------------
+#-----------------------------------------------------------------------
 ```
 we fitted K-nearest neighbor classifiers to the training data for different values of $k=1,2,…,30$ and plot the dependence of the training and validation misclassification.
 ```{r,message=FALSE,warning=FALSE}
@@ -203,7 +211,6 @@ K <- 1:30
 df<-data.frame(train_missclass,K1 =K)
 df2<-data.frame(valid_missclass,K2 =K)
 df3 <- data.frame(df,df2)
-
 ggplot( ) +
    geom_line(aes(x=df3$K1,y=df3$train_missclass,
                  colour="training")) +
@@ -214,6 +221,16 @@ ggplot( ) +
    xlab("Parameter 'k'") + ylab("missclassification") +
    geom_vline(xintercept = 3
                    , linetype = "dashed",color = "blue")
+```
+from the plot we can see that $k=3$ is the optimal parameter for our model as it result in the lowest missclassification error. Furthermore, we test our model with $k=3$ and we see :
+```{r,message=FALSE,warning=FALSE}
+KKNN_model_test <- kknn(formula =V65~., kernel = "rectangular", train = train, 
+                            test = test, k = 3)
+cat("for k = 3 :\n")
+cat("miss classification error on training set =",train_missclass[3],"\n")
+cat("miss classification error on validation set = ",valid_missclass[3],"\n")
+cat("miss classification error on test set = ",
+    missclass(test$V65,KKNN_model_test$fitted.values),"\n")
 ```
 from the plot we can see that $k=3$ is the optimal parameter for our model as it result in the lowest missclassification error. Furthermore, we test our model with $k=3$ and we see :
 ```{r,message=FALSE,warning=FALSE}
@@ -235,16 +252,22 @@ for $k=3$ bias is the smallest because missclassification error is the lowest an
 
 
 ## A.1.5 
+```{r}
+#-----------------------------------------------------------------------
+# A.1.5
+#-----------------------------------------------------------------------
+```
 Fit K-nearest neighbor classifiers to training data for different values of $k=1,2,…,30$ and compute the empirical risk for the validation data as cross-entropy.
 
 Cross Entropy formula is : 
 
 
 $$CrossEntropy = -\sum_{c=1}^My_{o,c}\log(p_{o,c})$$
-- $M$:number of classes $(0,1,2,...)$
-- $y$: binary indicator (0 or 1) if class label 
-- $c$: is the correct classification for observation $o$
-- $p$:  predicted probability observation $o$ is of class $c$
+
+   - $M$:number of classes $(0,1,2,...)$
+   - $y$: binary indicator (0 or 1) if class label 
+   - $c$: is the correct classification for observation $o$
+   - $p$:  predicted probability observation $o$ is of class $c$
 From the plot we can see $k=15$ is the better parameter for our model. 
 
 ![Cross Entropy](images/CrossEntropy.png){width=60%}
@@ -255,9 +278,9 @@ $k=15$ results to the lowest empirical risk error.
 from a probabilistic view $MSE$ arises from the Liner Regression problem while Cross Enropy arises from Logistic Regression problems.
 we want to classify we are dealing with discrete output so, Cross Entropy is the better choice. Furthermore, $MSE$ does not penalizes the model for wrong classification as much as Cross Entropy does.Actually, Cross Entropy penalizes the model for incorrect classification a lot more than $MSE$ , as, its derivative is higher.
 ```{r,message=FALSE,warning=FALSE,fig.show='hide'}
-#-------------------------------------------------------
+#-----------------------------------------------------------------------
 # A.1.5
-#-------------------------------------------------------
+#-----------------------------------------------------------------------
 library(kknn)
 library(reshape)
 library(ggplot2)
@@ -277,7 +300,8 @@ encode_ordinal <- function(j) {
 ce <- c()
 for (k in 1:30){
    
-   KKNN_model_valid <- kknn(train$V65 ~ ., train = train ,test = valid, k = k, kernel = "rectangular")
+   KKNN_model_valid <- kknn(train$V65 ~ ., train = train ,test = valid, k = 
+                               k, kernel = "rectangular")
    
 
    prob_df <- KKNN_model_valid$prob
@@ -301,8 +325,8 @@ names(metrics) <- c("cross_entropy", "k")
 df1 <- melt(metrics, id.var='k')
 
 names(df1)[3] <- "cross_entropy"
-head(df1)
-ggplot(df1, aes(x=k, y=cross_entropy, col='cross_Entropy')) + geom_line(colour="purple") + theme_minimal()+
+ggplot(df1, aes(x=k, y=cross_entropy, col='cross_Entropy')) + 
+   geom_line(colour="purple") + theme_minimal()+
    ggtitle("Finding the best Parameter") +
    scale_x_continuous(breaks = seq(1,30,2)) +
    geom_vline(xintercept = 15
@@ -312,9 +336,205 @@ best_K <- which(ce==min(ce))
 cat("The best performant K parameter is k =", as.character(best_K))
 ```
 # 2. Assignment 2 - Ridge regression and model selection
+```{r}
+#-----------------------------------------------------------------------
+# A.2.1
+#-----------------------------------------------------------------------
+```
+**Data Description : ** The data consists of voice characteristic measurements from 43 people suffering from early stage of Parkinson's disease. The voice characteristic data are obtained by monitoring patients for six months using a tele-monitoring device. The aim is to predict a score for the symptoms of the disease.
+
+* The data consists of 16 voice characteristics which constitutes our input(consider it as X).
+
+* Output will be the score which is motor UPDRS variable(consider it as Y).
+
+Since our target variable can be obtained by ridge regression of voice characteristics and that target variable(Y) is normally distributed, our target variable can be written as
+
+  Y $\sim$ $N$($XW$,$\sigma^2$),
+
+  W $\sim$ $N$(0,$\sigma^2$ $\lambda^{-1} I$), where W is weight matrix and lambda is penalty constant.
+
+
+**2.Scale and split data :** 
+```{r}
+#-----------------------------------------------------------------------
+# A.2.2
+#-----------------------------------------------------------------------
+```
+The data is scaled to supress the magnitudes and is split into train and test data. Train and Test data has an extra column of 1's added for intercept($w0$). This data is divided into input and output for train and test respectively for better readability.
+
+```{r }
+parkinson_data <- read.csv('parkinsons.csv')
+parkinson_scaled_data <- scale(parkinson_data[,5:22])
+
+n <- nrow(parkinson_scaled_data)
+set.seed(1234)
+
+# Obtaining train and test values randomly using sample function
+id = sample(1:n, floor(n * 0.6))
+train_data <- parkinson_scaled_data[id,]
+train_data <- cbind(1,train_data)
+test_data <-parkinson_scaled_data[-id,]
+test_data <- cbind(1,test_data)
+
+# Train and test values are separated by input and output for better readability
+x_train <- train_data[,c(1,4:19)]
+y_train <- train_data[,2]
+
+x_test <- test_data[,c(1,4:19)]
+y_test <- test_data[,2]
+```
+
+```{r}
+#-----------------------------------------------------------------------
+# A.2.3
+#-----------------------------------------------------------------------
+```
+**3.a Log Likelihood :**
+
+likelihood, P(D|w,$\sigma$) = $\pi$ $\frac{1}{\sqrt{2\pi \sigma^2}}$ exp[$\frac{-(Y - X^TW)^2}{2\sigma^2}$]
+
+log likelihood = -n$\log{\sigma}$ - $\frac{n}{2}$ $\log{2\pi}$ - $\frac{1}{2\sigma^2}$ * $\Sigma$ {$(ytrain - (xtrain*w))^2$}
+
+
+```{r }
+loglikelihood <- function(data,w, si){
+  x <- data[,c(1,4:19)]
+  y <- data[,2]
+  n <- ncol(x)
+  loss <- (y - (x %*% (as.matrix(w))))^2
+  ll <- -((n/2)*log(si^2)) - ((n/2) * log(2 * pi)) - ((1/2*si*si) * sum(loss))
+  return(ll)
+}
+```
+
+**3.b Ridge loss function :**
+
+penalty $\sim$ $exp(-\lambda W^TW/2\sigma^2)$
+
+ridge loss = $loglikelihood(w, \sigma) + \frac{\lambda}{2\sigma^2} * \Sigma$ {$w^2$}
+
+```{r }
+ridge <- function(data,par){
+    w <- par[1:17]
+    si <- par[18]
+    
+    ridge_loss <- loglikelihood(data, w, si) + ((1/(2*si*si))*(lambda * sum(w^2)))
+    return(ridge_loss)
+  }
+```
+
+**3.c Ridge Opt function**
+
+
+```{r }
+ridge_opt <- function(data,lamda){
+  
+  ridge <- function(par){
+    w <- par[1:17]
+    si <- par[18]
+    ridge_loss <- (-loglikelihood(data, w, si)) + ((1/(2*si*si))*(lambda * sum(w^2)))#-((n/2)*log(si^2)) - ((n/2) * log(2 * pi))
+    return(ridge_loss)
+  }
+  
+  set.seed(1234)
+  w <- sample(17)
+  si <-  sample(1)
+  lambda <- lamda
+  out<- optim(c(w, si), ridge, method = 'BFGS')$par
+  return(out)
+}
+```
+
+**3.d Degrees of freedom :**
+
+degrees of freedom = trace(hat_matrix)
+
+```{r }
+df <- function(lambda){
+  tobeinv <- (t(x_train) %*% x_train) + (lambda * diag(17))
+  hat_matrix <- x_train %*% solve(tobeinv) %*% t(x_train)
+  deg_of_freedom <- sum(diag(hat_matrix))
+  return(deg_of_freedom)
+}
+```
+```{r}
+#-----------------------------------------------------------------------
+# A.2.4
+#-----------------------------------------------------------------------
+```
+**4.**
+The values obtained below are MSE for $\lambda$ = 1,100,1000 respectively for both train and test data.
+
+```{r echo=FALSE}
+
+lambda_vec <- c(1,100,1000)
+
+mean_squared_error_train <- c()
+mean_squared_error_test = c()
+l <- c()
+
+for(val in lambda_vec){
+  # Obtaining optimal 'w' values using ridge_opt()
+  param <- ridge_opt(train_data,val)
+  w <- param[1:17]
+  
+  # MSE for train data
+  pred_motor_UPDRS <- x_train %*% w
+  n <- length(y_train)
+  mse <- (1/n)* sum((pred_motor_UPDRS - y_train)^2)
+  mean_squared_error_train<- append(mean_squared_error_train,mse)
+  
+  # MSE for test data
+  pred_motor_UPDRS_test <- x_test %*% w
+  n <- length(y_test)
+  mse_test <- (1/n)* sum((pred_motor_UPDRS_test - y_test)^2)
+  mean_squared_error_test <- append(mean_squared_error_test,mse_test)
+}
+
+print(mean_squared_error_train)
+print(mean_squared_error_test)
+
+```
+
+As observed from mean squared error values for train and test data, it is evident that the penalty parameter, $\lambda$ = 1 is the most appropriate one as the loss in this case is less comparatively.
+
+**5.**
+```{r}
+#-----------------------------------------------------------------------
+# A.2.5
+#-----------------------------------------------------------------------
+```
+```{r echo=FALSE}
+
+aic <- function(lambda){
+  param <- ridge_opt(train_data,lambda)
+  w <- param[1:17]
+  si <- param[18]
+  l <- loglikelihood(train_data,w,si)
+  d <- df(lambda)
+  info_criteria <- 2*(d-l)
+  return(info_criteria)
+}
+
+lambda_vec <- c(1,100,1000)
+aic_vec <- c()
+for(a_val in lambda_vec){
+  aic_vec <- append(aic_vec,aic(a_val))
+}
+
+aic_vec
+```
+
+From the AIC(Akaike Information Criteria) values obtained using different $\lambda$ values, it is observed that the model with  $\lambda$ = 100 and respective optimal parameters has lower AIC value comparatively which implies that the model is less complex.Hence, concluding the optimal model to be the one with $\lambda$ = 100.
+
+AIC measures balance between model fit and model complexity. It is using likelihood and degrees of freedom to obtain the measure. The complexity of the model can be interpreted from this measure This feature cannot be obtained using MSE(Mean Squared Error) which chooses a random penalty parameter and obtained the model with less error.
 
 # 3. Assignment 3 - Linear regression and LASSO
-
+```{r}
+#-----------------------------------------------------------------------
+# A.3.1
+#-----------------------------------------------------------------------
+```
 In this assignment we use LASSO to fit models concerning the fat content in samples of meat. For the assignment the fat content is assumed to be linearly dependent on a 100 channel spectrum of absorbance records. Before fitting any model the data is divided into train, validation and test sets with the following code:         
 
 ```{r}
@@ -366,12 +586,20 @@ cat("The training error is: ",
 As can be observed by the above results the training error for this model is very low, but in contrast the test error is a lot higher. This suggests that using all 100 channels to predict the fat content leads to a highly overfitted model which performs very well on the training set but poorly on the test set.    
 
 ### 3.2 - Objective function of LASSO regression
-
+```{r}
+#-----------------------------------------------------------------------
+# A.3.2
+#-----------------------------------------------------------------------
+```
 If the relationship is still assumed to be linear an alternative to the regression model in 3.1 is the model known as least absolute shrinkage and selection operator, or LASSO. This model minimizes the minus log-likelihood plus a penalty factor $\lambda$ to force less influential features to zero and thereby exclude them from the model. The function to optimize for this model can be expressed as follows:   
 $$\hat{w}^{lasso} = argmin \sum_{i=1}^N(y_i-w_0-w_1x_{1i}-...-w_px_{pi})^2 + \lambda\sum_{j=1}^p|w_j|$$
 
 ### 3.3 - LASSO regression model
-
+```{r}
+#-----------------------------------------------------------------------
+# A.3.3
+#-----------------------------------------------------------------------
+```
 To fit a LASSO model in R the **glmnet()** function is used with parameter $\alpha = 1$ indicating that the model should be trained with the LASSO penalty factor.
 
 ```{r}
@@ -389,7 +617,11 @@ plot(fat_lasso,
 From the plot it can be observed that as $log(\lambda)$ increases the amount of coefficients included in the model decreases. A lot of the coefficients are forced to zero very quickly, which can be seen by observing the individual steps, where already at the first with $\lambda=0.0051$ the amount of channels have already gone from the initial 100 down to 37. To acquire a model with only three features a $\lambda$ of about $0.7$ has to be used.     
 
 ### 3.4 - Degrees of freedom vs penalty parameter
-
+```{r}
+#-----------------------------------------------------------------------
+# A.3.4
+#-----------------------------------------------------------------------
+```
 Another way to visualize the result is to show how the degrees of freedom of the model depend on the penalty parameter. 
 
 ```{r, results=FALSE, message=FALSE}
@@ -406,7 +638,11 @@ plot(fat_lasso_print$Lambda,
 The plot shows that as $\lambda$ increases the degrees of freedom go down, which is expected since the degrees of freedom is the amount of features in the model and as $\lambda$ increases more of these features are forced to 0 and excluded from the model. 
 
 ### 3.5 - Ridge regression model
-
+```{r}
+#-----------------------------------------------------------------------
+# A.3.5
+#-----------------------------------------------------------------------
+```
 To compare how the LASSO model treats the model features the model from 3.3 is fitted, this time using Ridge regression instead. This is done with the same function, but with the parameter $\alpha=0$: 
 
 ```{r}
@@ -420,7 +656,11 @@ plot(fat_ridge,
 The graph shows that unlike for the LASSO model, where a lot of coefficients were very quickly forced to zero, the Ridge regression does this at a slower and more gradual rate. It is also the case that for the Ridge model no feature is completely removed from the model, but are instead kept with the very low coefficient. This can be observed by the axis ticks at the top of the graph, which always say 100, compared to for the LASSO model where this number goes down as features are removed.
 
 ### 3.6 - LASSO model with cross-validation
-
+```{r}
+#-----------------------------------------------------------------------
+# A.3.6
+#-----------------------------------------------------------------------
+```
 To find which value of $\lambda$ leads to the most optimal value cross-validation is used. The object of this process is plotted to observe how different values of $\lambda$ affects the result.
 
 ```{r}
@@ -454,7 +694,11 @@ plot(x = fat_lasso_cv_preds,
 Overall it seems the model looks to be making fairly solid predictions, at least for lower levels of Fat. The correlation between the predicted values and the true values is `r round(cor(test$Fat, fat_lasso_cv_preds), digits=2)`. It can be seen that as Fat levels increase there is a slight curve to the slope of the points, as the model predicts too high levels of fat. As an example of this there are 5 points predicted to have a fat level between 50 and 60 while in reality these observations all had levels below 50. 
 
 ### 3.7 - Generate new data
-
+```{r}
+#-----------------------------------------------------------------------
+# A.3.7
+#-----------------------------------------------------------------------
+```
 The last step is to use the feature values from the test data and use the model based on the optimal $\lambda$ to generate new values for fat content. The values are generated from a normal distribution with a mean based on the coefficients of the chosen model and a standard deviation set as the standard deviation of the residuals from the predictions on the train set. The generated values are then plotted against the true values from the test set. 
 
 ```{r}
