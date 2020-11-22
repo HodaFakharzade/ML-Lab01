@@ -171,11 +171,15 @@ grid.arrange(img1, img2, img3,ncol = 3)
 
 ```
 These cases is also hard to be recognize as $8$ by human as well (my opinion).
+
+## A.1.4
+
 ```{r}
 #-------------------------------------------------------
 # A.1.4
 #-------------------------------------------------------
 ```
+we fitted K-nearest neighbor classifiers to the training data for different values of $k=1,2,…,30$ and plot the dependence of the training and validation misclassification.
 ```{r,message=FALSE,warning=FALSE}
 missclass=function(X,X1){
   n=length(X)
@@ -206,10 +210,103 @@ ggplot( ) +
    geom_line(aes(x=df3$K2,y=df3$valid_missclass,
                  colour="validation")) + 
    theme_minimal()+ggtitle("Finding the best Parameter") +
-   scale_x_continuous(breaks = 1:30) +
+   scale_x_continuous(breaks = seq(1,30,2)) +
    xlab("Parameter 'k'") + ylab("missclassification") +
    geom_vline(xintercept = 3
-                   , linetype = "dotted",color = "blue")
+                   , linetype = "dashed",color = "blue")
+```
+from the plot we can see that $k=3$ is the optimal parameter for our model as it result in the lowest missclassification error. Furthermore, we test our model with $k=3$ and we see :
+```{r,message=FALSE,warning=FALSE}
+KKNN_model_test <- kknn(formula =V65~., kernel = "rectangular", train = train, 
+                            test = test, k = 3)
+cat("for k = 3 :\n")
+cat("miss classification error on training set =",train_missclass[3],"\n")
+cat("miss classification error on validation set = ",valid_missclass[3],"\n")
+cat("miss classification error on test set = ",
+    missclass(test$V65,KKNN_model_test$fitted.values),"\n")
+
+```
+
+miss classification error rate is smaller in training set as expected. The $MSE$ is almost equal on validation set and test set which indicate the model does not overfit. from the plot we observe  that as $k$ increases, the complexity of the model also increases.
+optimal value of $k$ in this plot is 3. 
+\
+Usually when the complexity is high we observe a high variance and when the model complexity is we face a model with high bias. Our goal is to minimize these 2 variable, hence there is always a trade-off between variance and bias.
+for $k=3$ bias is the smallest because missclassification error is the lowest and the difference between missclassification error on the training set and validation set is also small, and that is why $k=3$ is the most suitable choice for our model.
+## A.1.5 
+From the plot we can see $k=15$ is the better parameter for our model. 
+![Cross Entropy](images/CrossEntropy.png)
+
+$k=15$ results to the lowest empirical risk error. 
+
+Cross Entropy formula is : 
+
+
+$CrossEntropy = -\sum_{c=1}^My_{o,c}\log(p_{o,c})$
+
+- $M$:number of classes $(0,1,2,...)$
+- $y$: binary indicator (0 or 1) if class label 
+- $c$: is the correct classification for observation $o$
+- $p$:  predicted probability observation $o$ is of class $c$
+    
+
+from a probabilistic view $MSE$ arises from the Liner Regression problem while Cross Enropy arises from Logistic Regression problems.
+we want to classify we are dealing with discrete output so, Cross Entropy is the better choice. Furthermore, $MSE$ does not penalizes the model for wrong classification as much as Cross Entropy does.Actually, Cross Entropy penelizes the model for incorrect classification a lot more than $MSE$ , as, its derivative is higher.
+```{r,message=FALSE,warning=FALSE,fig.show='hide'}
+#-------------------------------------------------------
+# A.1.5
+#-------------------------------------------------------
+library(kknn)
+library(reshape)
+library(ggplot2)
+crossEntropy <- function(x){
+   for (row in 1:nrow(x)){
+      x[row, "cross_entropy"] <- -sum(log(x[row, 1:10]+1e-15, 
+                                          base = 2)*v_prob[[row,"coded"]] )
+   }
+   return(x)
+}
+
+encode_ordinal <- function(j) {
+   x <- rep(0,10)
+   x[j+1] <- 1
+   return(I(x))
+   }
+ce <- c()
+for (k in 1:30){
+   
+   KKNN_model_valid <- kknn(train$V65 ~ ., train = train ,test = valid, k = k, kernel = "rectangular")
+   
+
+   prob_df <- KKNN_model_valid$prob
+   digits <- colnames(prob_df)[apply(prob_df,1,which.max)]
+   v_prob <- data.frame(prob_df)
+   v_prob$y <- valid$V65
+   v_prob$y_hat <- KKNN_model_valid$fitted.values
+   v_prob$digits <- digits
+   
+   v_prob$coded <- (lapply(as.numeric(v_prob$y )-1,  encode_ordinal ))
+   
+   v_prob <- crossEntropy(v_prob)
+   
+   ce[k] <- mean(v_prob$cross_entropy)
+   
+}
+
+metrics <- data.frame(ce, 1:30)
+names(metrics) <- c("cross_entropy", "k")
+
+df1 <- melt(metrics, id.var='k')
+
+names(df1)[3] <- "cross_entropy"
+head(df1)
+ggplot(df1, aes(x=k, y=cross_entropy, col='cross_Entropy')) + geom_line(colour="purple") + theme_minimal()+
+   ggtitle("Finding the best Parameter") +
+   scale_x_continuous(breaks = seq(1,30,2)) +
+   geom_vline(xintercept = 15
+ , linetype = "dashed",color = "green")
+
+best_K <- which(ce==min(ce))
+cat("The best performant K parameter is k =", as.character(best_K))
 ```
 # 2. Assignment 2 - Ridge regression and model selection
 
@@ -385,7 +482,7 @@ In general the conclusions that can be drawn from this plot are similar to those
 
 
 \newpage
-# Appendix: Assignment 3
+# Appendix: Assignment Code
 
-```{r, ref.label=knitr::all_labels(a3==TRUE), echo=T, eval=F}
+```{r, ref.label=knitr::all_labels(), echo=T, eval=F}
 ``` 
